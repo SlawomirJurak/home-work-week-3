@@ -2,6 +2,7 @@ package pl.sgnit.homeworkweek3cars;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -15,19 +16,24 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/cars")
+@CrossOrigin
 public class CarApi {
 
     private List<Car> carList;
+    private AtomicLong counter;
 
     public CarApi() {
+        counter = new AtomicLong();
         carList = new ArrayList<>();
         carList.add(new Car(1L, "Citroen", "C3", "red"));
         carList.add(new Car(2L, "Ford", "Mondeo", "blue"));
         carList.add(new Car(3L, "Audi", "Q3", "black"));
+        counter.set(3);
     }
 
     @GetMapping
@@ -46,10 +52,10 @@ public class CarApi {
     }
 
     @GetMapping("/color/{colorName}")
-    public ResponseEntity<List<Car>> getByColor(@PathVariable String colorName){
+    public ResponseEntity<List<Car>> getByColor(@PathVariable String colorName) {
         List<Car> cars = carList.stream().filter(car -> car.getColor().equals(colorName)).collect(Collectors.toList());
 
-        if(cars.isEmpty()) {
+        if (cars.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(cars, HttpStatus.OK);
@@ -57,6 +63,7 @@ public class CarApi {
 
     @PostMapping
     public ResponseEntity addCar(@RequestBody Car car) {
+        car.setId(counter.incrementAndGet());
         boolean add = carList.add(car);
 
         if (add) {
@@ -67,7 +74,7 @@ public class CarApi {
 
     @PutMapping
     public ResponseEntity updateCar(@RequestBody Car newCar) {
-        Optional<Car> car = carList.stream().filter(car1 -> car1.getId()==newCar.getId()).findFirst();
+        Optional<Car> car = carList.stream().filter(car1 -> car1.getId() == newCar.getId()).findFirst();
 
         if (car.isPresent()) {
             carList.remove(car.get());
@@ -79,9 +86,9 @@ public class CarApi {
 
     @PatchMapping("/{id}/{property}/{value}")
     public ResponseEntity updateCarProperty(@PathVariable Long id, @PathVariable String property, @PathVariable String value) {
-        Optional<Car> optionalCar = carList.stream().filter(car1 -> car1.getId()==id).findFirst();
+        Optional<Car> optionalCar = carList.stream().filter(car1 -> car1.getId() == id).findFirst();
 
-        if(optionalCar.isEmpty()) {
+        if (optionalCar.isEmpty()) {
             return new ResponseEntity(HttpStatus.NOT_FOUND);
         }
 
@@ -109,9 +116,9 @@ public class CarApi {
 
     @DeleteMapping("/{id}")
     public ResponseEntity deleteCar(@PathVariable Long id) {
-        Optional<Car> optionalCar = carList.stream().filter(car -> car.getId()==id).findFirst();
+        Optional<Car> optionalCar = carList.stream().filter(car -> car.getId() == id).findFirst();
 
-        if(optionalCar.isPresent()) {
+        if (optionalCar.isPresent()) {
             carList.remove(optionalCar.get());
             return new ResponseEntity(HttpStatus.OK);
         }
